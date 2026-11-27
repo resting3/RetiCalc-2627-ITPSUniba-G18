@@ -19,7 +19,6 @@
 
 #define BUFFERSIZE 512
 
-// Function declaration
 int readBuffer(SOCKET Csocket, char *out);
 int send_message(SOCKET MySocket, char *inputString);
 
@@ -45,7 +44,6 @@ int main(void) {
     if (scanf("%d", &port) != 1) return -1;
 
 #ifdef _WIN32
-    // Inizializzazione Winsock
     WSADATA wsaData;
 
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -56,7 +54,6 @@ int main(void) {
     }
 #endif
 
-    // CREAZIONE DELLA SOCKET
     SOCKET Csocket;
 
     Csocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -69,7 +66,6 @@ int main(void) {
 
     printf("Socket created successfully.\n");
 
-    // COSTRUZIONE DELL'INDIRIZZO DEL SERVER
     struct sockaddr_in sad;
 
     memset(&sad, 0, sizeof(sad));
@@ -78,7 +74,6 @@ int main(void) {
     sad.sin_addr.s_addr = inet_addr(ip);
     sad.sin_port = htons(port);
 
-    // CONNESSIONE AL SERVER
     if (connect(Csocket, (struct sockaddr *)&sad, sizeof(sad)) == SOCKET_ERROR) {
 
         ErrorHandler("Failed to connect.\n");
@@ -93,7 +88,6 @@ int main(void) {
 
     char answer[BUFFERSIZE + 1];
 
-    // RICEZIONE DI "connessione avvenuta"
     if (readBuffer(Csocket, answer) <= 0) {
         closesocket(Csocket);
         ClearWinSock();
@@ -115,24 +109,21 @@ int main(void) {
         printf("Inserire terzo numero: ");
         if (scanf("%d", &n3) != 1) break;
 
-        // Unire i tre numeri in un'unica stringa
         snprintf(buffer, sizeof(buffer), "%d %d %d", n1, n2, n3);
 
         if (send_message(Csocket, buffer) != 0) break;
 
-        // RICEZIONE DELLA RISPOSTA DEL SERVER
         if (readBuffer(Csocket, answer) <= 0) break;
 
         printf("Messaggio ricevuto: %s\n", answer);
 
         if (strcmp(answer, "QUIT") == 0) {
-            break;   // chiude la connessione e termina
+            break;
         }
 
         printf("Risultato: %s\n\n", answer);
     }
 
-    // CHIUSURA DELLA CONNESSIONE
     closesocket(Csocket);
 
     ClearWinSock();
@@ -146,8 +137,6 @@ int main(void) {
     return 0;
 }
 
-
-// Riceve un messaggio e lo mette in out. Ritorna i byte ricevuti (0 = server chiuso, <0 = errore)
 int readBuffer(SOCKET Csocket, char *out) {
 
     int bytesRcvd;
@@ -169,12 +158,10 @@ int readBuffer(SOCKET Csocket, char *out) {
     return bytesRcvd;
 }
 
-
 int send_message(SOCKET MySocket, char *inputString) {
 
     int stringLen = (int)strlen(inputString);
 
-    // INVIARE DATI AL SERVER
     int bytesSent = 0;
 
     while (bytesSent < stringLen) {
