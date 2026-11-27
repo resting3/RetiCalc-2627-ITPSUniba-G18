@@ -31,7 +31,6 @@ void ClearWinSock() {
 #endif
 }
 
-// Function declaration
 int send_message(SOCKET MySocket, char *inputString);
 void readBuffer(SOCKET Csocket);
 
@@ -39,7 +38,6 @@ int main(int argc, char *argv[]) {
 
     int port;
 
-    // Lettura della porta
     if (argc > 1) {
         port = atoi(argv[1]);
     }
@@ -53,7 +51,6 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef _WIN32
-    // Inizializzazione Winsock
     WSADATA wsaData;
 
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -64,7 +61,6 @@ int main(int argc, char *argv[]) {
     }
 #endif
 
-    // CREAZIONE DELLA SOCKET
     SOCKET MySocket;
 
     MySocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -77,13 +73,12 @@ int main(int argc, char *argv[]) {
 
     printf("Socket created successfully.\n");
 
-    // ASSEGNAZIONE DI UN INDIRIZZO ALLA SOCKET
     struct sockaddr_in sad;
 
     memset(&sad, 0, sizeof(sad));
 
     sad.sin_family = AF_INET;
-    sad.sin_addr.s_addr = htonl(INADDR_ANY);   // ascolta su tutte le interfacce (non solo 127.0.0.1)
+    sad.sin_addr.s_addr = htonl(INADDR_ANY);
     sad.sin_port = htons(port);
 
     if (bind(MySocket, (struct sockaddr *)&sad, sizeof(sad)) == SOCKET_ERROR) {
@@ -95,7 +90,6 @@ int main(int argc, char *argv[]) {
 
     printf("Socket bound to port %d.\n", port);
 
-    // SETTAGGIO DELLA SOCKET ALL'ASCOLTO
     if (listen(MySocket, QLEN) == SOCKET_ERROR) {
         ErrorHandler("listen() failed.\n");
         closesocket(MySocket);
@@ -105,7 +99,6 @@ int main(int argc, char *argv[]) {
 
     printf("Server listening...\n");
 
-    // ACCETTARE UNA NUOVA CONNESSIONE
     struct sockaddr_in cad;
 
     SOCKET clientSocket;
@@ -113,7 +106,7 @@ int main(int argc, char *argv[]) {
 
     printf("Waiting for a client to connect...\n");
 
-    while (1) {   // il server resta sempre in ascolto
+    while (1) {
 
         clientLen = sizeof(cad);
 
@@ -125,38 +118,31 @@ int main(int argc, char *argv[]) {
 
         if (clientSocket == INVALID_SOCKET) {
             ErrorHandler("accept() failed.\n");
-            continue;   // un accept fallito non deve fermare il server
+            continue;
         }
 
         printf("Connesso con il client il cui nome IP: %s\n",
                inet_ntoa(cad.sin_addr));
 
-        // INVIO DEL MESSAGGIO AL CLIENT
         if (send_message(clientSocket, "connessione avvenuta") == 0) {
-            // CICLO: riceve n1 n2 n3, risponde con res o QUIT
             readBuffer(clientSocket);
         }
 
-        // CHIUSURA DELLA CONNESSIONE CLIENT
         closesocket(clientSocket);
 
         printf("Waiting for another client...\n");
     }
 
-    // CHIUSURA DEL SERVER
     closesocket(MySocket);
     ClearWinSock();
 
     return 0;
 }
 
-
-// FUNZIONE PER INVIARE IL MESSAGGIO (ritorna 0 se OK, -1 se errore)
 int send_message(SOCKET MySocket, char *inputString) {
 
     int stringLen = (int)strlen(inputString);
 
-    // INVIARE DATI AL CLIENT
     int bytesSent = 0;
 
     while (bytesSent < stringLen) {
@@ -181,7 +167,6 @@ int send_message(SOCKET MySocket, char *inputString) {
     return 0;
 }
 
-// FUNZIONE CHE RICEVE I NUMERI, CALCOLA E RISPONDE
 void readBuffer(SOCKET Csocket) {
 
     int bytesRcvd;
@@ -198,7 +183,6 @@ void readBuffer(SOCKET Csocket) {
         );
 
         if (bytesRcvd == 0) {
-            // Il client ha chiuso la connessione
             printf("Client disconnected.\n");
             break;
         }
@@ -225,7 +209,7 @@ void readBuffer(SOCKET Csocket) {
 
         if (res == 100) {
             send_message(Csocket, "QUIT");
-            break;   // il client chiudera' la connessione
+            break;
         }
 
         snprintf(reply, sizeof(reply), "%d", res);
